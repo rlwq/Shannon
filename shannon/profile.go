@@ -1,4 +1,4 @@
-package bot
+package shannon
 
 type Profile struct {
 	Name string
