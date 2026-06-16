@@ -1,13 +1,14 @@
 package bot
 
 import (
+	"Shannon/shannon"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type Bot struct {
 	api        *tg.BotAPI
 	fsm        *FSM
-	unfinished map[int64]*Profile
+	unfinished map[int64]*shannon.Profile
 }
 
 func NewBot(token string) (*Bot, error) {
@@ -18,7 +19,7 @@ func NewBot(token string) (*Bot, error) {
 	return &Bot{
 		api:        api,
 		fsm:        NewFSM(),
-		unfinished: (map[int64]*Profile{}),
+		unfinished: (map[int64]*shannon.Profile{}),
 	}, nil
 }
 
@@ -49,7 +50,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 		bot.SendMessage(from, "Enter your name: ")
 		bot.fsm.states[from] = StateWaitName
 
-		bot.unfinished[from] = &Profile{}
+		bot.unfinished[from] = &shannon.Profile{}
 
 	case StateWaitName:
 		bot.SendMessage(from, "Cool name!")

@@ -1,6 +1,7 @@
 package shannon
 
 type Profile struct {
-	Name string
-	Bio  string
+	UserID uint64
+	Name   string
+	Bio    string
 }
