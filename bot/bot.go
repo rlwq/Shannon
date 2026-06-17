@@ -78,7 +78,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 	}
 }
 
-func (bot *Bot) Start() {
+func (bot *Bot) Run() {
 	updateConfig := tg.NewUpdate(0)
 	updateConfig.Timeout = 30
 
