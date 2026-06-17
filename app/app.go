@@ -2,22 +2,24 @@ package app
 
 import (
 	"Shannon/bot"
-	"Shannon/repository"
+	"Shannon/repo"
 	"Shannon/service"
 )
 
 type App struct {
 	Bot        *bot.Bot
 	Service    *service.Service
-	Repository *repository.Repository
+	Repository *repo.Repo
 }
 
 func NewApp(token string, db_path string) *App {
 	bot, _ := bot.NewBot(token)
 	service := service.NewService()
-	repository := repository.NewRepository(db_path)
+	repo := repo.NewRepository(db_path)
 
-	return &App{bot, service, repository}
+	bot.LinkService(service)
+
+	return &App{bot, service, repo}
 }
 
 func (app *App) Run() {
