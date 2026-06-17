@@ -1,23 +1,21 @@
 package bot
 
 import (
+	"Shannon/service"
 	"Shannon/shannon"
 
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
-
-type IService interface {
-}
 
 type Bot struct {
 	api        *tg.BotAPI
 	fsm        *FSM
 	unfinished map[int64]*shannon.Profile
 
-	service IService
+	service *service.Service
 }
 
-func NewBot(token string) (*Bot, error) {
+func NewBot(token string, service *service.Service) (*Bot, error) {
 	api, err := tg.NewBotAPI(token)
 	if err != nil {
 		return nil, err
@@ -26,11 +24,8 @@ func NewBot(token string) (*Bot, error) {
 		api:        api,
 		fsm:        NewFSM(),
 		unfinished: (map[int64]*shannon.Profile{}),
+		service:    service,
 	}, nil
-}
-
-func (bot *Bot) LinkService(service IService) {
-	bot.service = service
 }
 
 func (bot *Bot) SendMessage(chat int64, text string) {
@@ -84,6 +79,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 				bot.unfinished[from].Name+
 				"\n"+bot.unfinished[from].Bio)
 
+		bot.service.CreateProfile(*bot.unfinished[from])
 		delete(bot.unfinished, from)
 	}
 }

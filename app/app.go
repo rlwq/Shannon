@@ -13,11 +13,9 @@ type App struct {
 }
 
 func NewApp(token string, db_path string) *App {
-	bot, _ := bot.NewBot(token)
-	service := service.NewService()
 	repo := repo.NewRepository(db_path)
-
-	bot.LinkService(service)
+	service := service.NewService(repo)
+	bot, _ := bot.NewBot(token, service)
 
 	return &App{bot, service, repo}
 }

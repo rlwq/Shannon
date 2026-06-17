@@ -1,20 +1,18 @@
 package service
 
 import (
-	"Shannon/bot"
 	"Shannon/repo"
+	"Shannon/shannon"
 )
 
 type Service struct {
-	bot  *bot.Bot
 	repo *repo.Repo
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(repo *repo.Repo) *Service {
+	return &Service{repo}
 }
 
-func (service *Service) LinkBotRepo(bot *bot.Bot, repo *repo.Repo) {
-	service.bot = bot
-	service.repo = repo
+func (service *Service) CreateProfile(profile shannon.Profile) {
+	service.CreateProfile(profile)
 }
