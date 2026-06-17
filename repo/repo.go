@@ -19,7 +19,7 @@ func (repo *Repo) initTables() {
 	repo.db.Exec(createTableSQL)
 }
 
-func NewRepository(path string) *Repo {
+func NewRepo(path string) *Repo {
 	repo := &Repo{}
 
 	db, err := sql.Open("sqlite", path)
@@ -35,10 +35,29 @@ func NewRepository(path string) *Repo {
 	return repo
 }
 
-func (repo *Repo) WriteProfile(profile *shannon.Profile) {
+func (repo *Repo) CreateProfile(profile shannon.Profile) {
 	writeProfileSQL := "INSERT INTO Profiles VALUES (?, ?, ?)"
 	_, err := repo.db.Exec(writeProfileSQL, profile.UserID, profile.Name, profile.Bio)
 	if err != nil {
 		panic("Can't WriteProfile")
 	}
+}
+
+func (repo *Repo) GetProfiles() []shannon.Profile {
+	rows, _ := repo.db.Query("SELECT * FROM Profiles")
+
+	profiles := []shannon.Profile{}
+	for rows.Next() {
+		profile := shannon.Profile{}
+		rows.Scan(profile.UserID, profile.Name, profile.Bio)
+		profiles = append(profiles, profile)
+	}
+	rows.Close()
+
+	return profiles
+}
+
+func (repo *Repo) DoesProfileExist(user int64) bool {
+	row := repo.db.QueryRow("SELECT UserID FROM Profiles WHERE UserID = ?", user)
+	return row != nil
 }

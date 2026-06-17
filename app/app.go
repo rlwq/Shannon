@@ -13,7 +13,7 @@ type App struct {
 }
 
 func NewApp(token string, db_path string) *App {
-	repo := repo.NewRepository(db_path)
+	repo := repo.NewRepo(db_path)
 	service := service.NewService(repo)
 	bot, _ := bot.NewBot(token, service)
 

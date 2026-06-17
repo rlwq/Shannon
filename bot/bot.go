@@ -41,11 +41,10 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 	from := update.Message.From.ID
 	text := update.Message.Text
 
-	state, ok := bot.fsm.states[from]
+	state := bot.fsm.GetState(from)
 
-	if !ok {
-		state = StateUnknown
-		bot.fsm.states[from] = StateUnknown
+	if state == StateUnknown && bot.service.DoesProfileExist(from) {
+		state = StateBrowsing
 	}
 
 	switch state {
@@ -53,15 +52,15 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 		bot.SendMessage(from, "Welcome!")
 
 		bot.SendMessage(from, "Enter your name: ")
-		bot.fsm.states[from] = StateWaitName
+		bot.fsm.SetState(from, StateWaitName)
 
-		bot.unfinished[from] = &shannon.Profile{}
+		bot.unfinished[from] = &shannon.Profile{UserID: from}
 
 	case StateWaitName:
 		bot.SendMessage(from, "Cool name!")
 
 		bot.SendMessage(from, "Enter your bio: ")
-		bot.fsm.states[from] = StateWaitBio
+		bot.fsm.SetState(from, StateWaitBio)
 
 		bot.unfinished[from].Name = text
 
@@ -69,7 +68,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 		bot.SendMessage(from, "Cool bio!")
 
 		bot.SendMessage(from, "Start browsing!")
-		bot.fsm.states[from] = StateBrowsing
+		bot.fsm.SetState(from, StateBrowsing)
 
 		bot.unfinished[from].Bio = text
 
@@ -81,7 +80,18 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 
 		bot.service.CreateProfile(*bot.unfinished[from])
 		delete(bot.unfinished, from)
+
+		profile := bot.service.NextProfileFor(from)
+		bot.SendProfile(from, profile)
+
+	case StateBrowsing:
+		profile := bot.service.NextProfileFor(from)
+		bot.SendProfile(from, profile)
 	}
+}
+
+func (bot *Bot) SendProfile(to int64, profile shannon.Profile) {
+	bot.SendMessage(to, profile.Name+"\n"+profile.Bio)
 }
 
 func (bot *Bot) Run() {
