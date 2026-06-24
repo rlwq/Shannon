@@ -49,7 +49,7 @@ func (repo *Repo) GetProfiles() []shannon.Profile {
 	profiles := []shannon.Profile{}
 	for rows.Next() {
 		profile := shannon.Profile{}
-		rows.Scan(profile.UserID, profile.Name, profile.Bio)
+		rows.Scan(&profile.UserID, &profile.Name, &profile.Bio)
 		profiles = append(profiles, profile)
 	}
 	rows.Close()

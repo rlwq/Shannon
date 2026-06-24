@@ -4,6 +4,7 @@ type State string
 
 const (
 	StateUnknown         State = "unknown"
+	StateSleep           State = "sleep"
 	StateWaitName        State = "wait_name"
 	StateWaitBio         State = "wait_bio"
 	StateBrowsing        State = "browsing"

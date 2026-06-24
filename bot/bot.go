@@ -7,6 +7,13 @@ import (
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+var browsingKeyboard = tg.NewReplyKeyboard(
+	tg.NewKeyboardButtonRow(
+		tg.NewKeyboardButton("👍"),
+		tg.NewKeyboardButton("👎"),
+	),
+)
+
 type Bot struct {
 	api        *tg.BotAPI
 	fsm        *FSM
@@ -44,7 +51,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 	state := bot.fsm.GetState(from)
 
 	if state == StateUnknown && bot.service.DoesProfileExist(from) {
-		state = StateBrowsing
+		state = StateSleep
 	}
 
 	switch state {
@@ -55,6 +62,10 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 		bot.fsm.SetState(from, StateWaitName)
 
 		bot.unfinished[from] = &shannon.Profile{UserID: from}
+
+	case StateSleep:
+		bot.SendMessage(from, "Welcome back!")
+		bot.fsm.SetState(from, StateBrowsing)
 
 	case StateWaitName:
 		bot.SendMessage(from, "Cool name!")
@@ -90,8 +101,11 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 	}
 }
 
-func (bot *Bot) SendProfile(to int64, profile shannon.Profile) {
-	bot.SendMessage(to, profile.Name+"\n"+profile.Bio)
+func (bot *Bot) SendProfile(chat int64, profile shannon.Profile) {
+	text := profile.Name + "\n" + profile.Bio
+	msg := tg.NewMessage(chat, text)
+	msg.ReplyMarkup = browsingKeyboard
+	bot.api.Send(msg)
 }
 
 func (bot *Bot) Run() {
