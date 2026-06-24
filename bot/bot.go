@@ -3,14 +3,19 @@ package bot
 import (
 	"Shannon/service"
 	"Shannon/shannon"
-
+	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
+
+const (
+	like    string = "👍"
+	dislike string = "👎"
 )
 
 var browsingKeyboard = tg.NewReplyKeyboard(
 	tg.NewKeyboardButtonRow(
-		tg.NewKeyboardButton("👍"),
-		tg.NewKeyboardButton("👎"),
+		tg.NewKeyboardButton(like),
+		tg.NewKeyboardButton(dislike),
 	),
 )
 
@@ -18,6 +23,7 @@ type Bot struct {
 	api        *tg.BotAPI
 	fsm        *FSM
 	unfinished map[int64]*shannon.Profile
+	lookingAt  map[int64]int64
 
 	service *service.Service
 }
@@ -30,7 +36,8 @@ func NewBot(token string, service *service.Service) (*Bot, error) {
 	return &Bot{
 		api:        api,
 		fsm:        NewFSM(),
-		unfinished: (map[int64]*shannon.Profile{}),
+		unfinished: map[int64]*shannon.Profile{},
+		lookingAt:  map[int64]int64{},
 		service:    service,
 	}, nil
 }
@@ -65,6 +72,7 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 
 	case StateSleep:
 		bot.SendMessage(from, "Welcome back!")
+		bot.ShowProfile(from)
 		bot.fsm.SetState(from, StateBrowsing)
 
 	case StateWaitName:
@@ -92,16 +100,22 @@ func (bot *Bot) handleUpdate(update tg.Update) {
 		bot.service.CreateProfile(*bot.unfinished[from])
 		delete(bot.unfinished, from)
 
-		profile := bot.service.NextProfileFor(from)
-		bot.SendProfile(from, profile)
+		bot.ShowProfile(from)
 
 	case StateBrowsing:
-		profile := bot.service.NextProfileFor(from)
-		bot.SendProfile(from, profile)
+		if text == like {
+			fmt.Printf("%v liked %v.\n", from, bot.lookingAt[from])
+		}
+		if text == dislike {
+			fmt.Printf("%v disliked %v.\n", from, bot.lookingAt[from])
+		}
+		bot.ShowProfile(from)
 	}
 }
 
-func (bot *Bot) SendProfile(chat int64, profile shannon.Profile) {
+func (bot *Bot) ShowProfile(chat int64) {
+	profile := bot.service.NextProfileFor(chat)
+	bot.lookingAt[chat] = profile.UserID
 	text := profile.Name + "\n" + profile.Bio
 	msg := tg.NewMessage(chat, text)
 	msg.ReplyMarkup = browsingKeyboard
